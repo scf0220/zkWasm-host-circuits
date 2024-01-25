@@ -50,7 +50,7 @@ pub struct RangeCheckChip<F: FieldExt> {
 impl<F: FieldExt> LookupAssistChip<F> for RangeCheckChip<F> {
     fn provide_lookup_evidence(
         &mut self,
-        region: &mut Region<F>,
+        region: &Region<F>,
         value: F,
         sz: u64,
     ) -> Result<(), Error> {
@@ -126,7 +126,7 @@ impl<F: FieldExt> RangeCheckChip<F> {
     /// Make sure the (value, sz) pair is lookupable in the range_chip
     pub fn assign_value_with_range(
         &mut self,
-        region: &mut Region<F>,
+        region: &Region<F>,
         value: F,
         sz: u64,
     ) -> Result<(), Error> {
@@ -172,7 +172,7 @@ impl<F: FieldExt> RangeCheckChip<F> {
 
     /// initialize the table column from 1 to 2^12
     /// initialize needs to be called before using the range_chip
-    pub fn initialize(&mut self, region: &mut Region<F>) -> Result<(), Error> {
+    pub fn initialize(&mut self, region: &Region<F>) -> Result<(), Error> {
         for i in 0..4096 {
             self.config.assign_cell(
                 region,
@@ -244,7 +244,7 @@ mod tests {
 
         fn assign_value(
             &self,
-            region: &mut Region<Fr>,
+            region: &Region<Fr>,
             offset: &mut usize,
             value: Fr,
         ) -> Result<AssignedCell<Fr, Fr>, Error> {
@@ -296,20 +296,20 @@ mod tests {
         fn synthesize(
             &self,
             config: Self::Config,
-            mut layouter: impl Layouter<Fr>,
+            layouter: impl Layouter<Fr>,
         ) -> Result<(), Error> {
-            let mut range_chip = RangeCheckChip::<Fr>::new(config.clone().rangecheckconfig);
             let helper_chip = HelperChip::new(config.clone().helperconfig);
             layouter.assign_region(
                 || "range check test",
-                |mut region| {
+                |region| {
+                    let mut range_chip = RangeCheckChip::<Fr>::new(config.clone().rangecheckconfig);
                     let v = Fr::from(1u64 << 24 + 1);
-                    range_chip.initialize(&mut region)?;
-                    range_chip.assign_value_with_range(&mut region, v, 4)?;
+                    range_chip.initialize(&region)?;
+                    range_chip.assign_value_with_range(&region, v, 4)?;
 
                     // assign helper
                     let mut offset = 0;
-                    helper_chip.assign_value(&mut region, &mut offset, v)?;
+                    helper_chip.assign_value(&region, &mut offset, v)?;
                     Ok(())
                 },
             )?;

@@ -107,7 +107,7 @@ impl<const D: usize> MerkleChip<Fr, D> {
     pub fn initialize(
         &mut self,
         config: &CommonGateConfig,
-        region: &mut Region<Fr>,
+        region: &Region<Fr>,
         offset: &mut usize,
     ) -> Result<(), Error> {
         self.merkle_hasher_chip.initialize(config, region, offset)?;
@@ -125,7 +125,7 @@ impl<const D: usize> MerkleChip<Fr, D> {
 
     pub fn assign_proof(
         &mut self,
-        region: &mut Region<Fr>,
+        region: &Region<Fr>,
         offset: &mut usize,
         proof: &MerkleProof<[u8; 32], D>,
         opcode: &Limb<Fr>,

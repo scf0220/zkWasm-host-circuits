@@ -98,33 +98,29 @@ impl<S: HostOpSelector> Circuit<Fr> for HostOpCircuit<Fr, S> {
         }
     }
 
-    fn synthesize(
-        &self,
-        config: Self::Config,
-        mut layouter: impl Layouter<Fr>,
-    ) -> Result<(), Error> {
+    fn synthesize(&self, config: Self::Config, layouter: impl Layouter<Fr>) -> Result<(), Error> {
         let host_op_chip =
             HostOpChip::<Fr, S>::construct(config.hostconfig.clone(), config.selectconfig.clone());
-        let mut selector_chip = S::construct(config.selectconfig);
-        let all_arg_cells = layouter.assign_region(
+        let (all_arg_cells, mut selector_chip) = layouter.assign_region(
             || "filter operands and opcodes",
-            |mut region| {
+            |region| {
                 let mut offset = 0;
                 let all_arg_cells = host_op_chip.assign(
-                    &mut region,
+                    &region,
                     self.k,
                     &mut offset,
                     &self.shared_operands,
                     &self.shared_opcodes,
                 )?;
+                let mut selector_chip = S::construct(config.selectconfig.clone());
 
                 println!("total arg cells: {:?}", all_arg_cells.len());
                 println!("selector offset start at: {:?}", offset);
-                selector_chip.synthesize(&mut offset, &all_arg_cells, &mut region)?;
-                Ok(all_arg_cells)
+                selector_chip.synthesize(&mut offset, &all_arg_cells, &region)?;
+                Ok((all_arg_cells, selector_chip))
             },
         )?;
-        selector_chip.synthesize_separate(&all_arg_cells, &mut layouter)?;
+        selector_chip.synthesize_separate(&all_arg_cells, &layouter)?;
         Ok(())
     }
 }

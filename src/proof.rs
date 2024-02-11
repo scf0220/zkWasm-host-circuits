@@ -11,7 +11,7 @@ use crate::circuits::{
 };
 use halo2_proofs::{
     arithmetic::FieldExt,
-    circuit::{Layouter, SimpleFloorPlanner},
+    circuit::{Layouter, FlatFloorPlanner},
     pairing::bn256::{Bn256, Fr},
     plonk::{Circuit, ConstraintSystem, Error},
 };
@@ -76,7 +76,7 @@ pub struct HostCircuitConfig<C: Clone> {
 impl<S: HostOpSelector> Circuit<Fr> for HostOpCircuit<Fr, S> {
     // Since we are using a single chip for everything, we can just reuse its config.
     type Config = HostCircuitConfig<S::Config>;
-    type FloorPlanner = SimpleFloorPlanner;
+    type FloorPlanner = FlatFloorPlanner;
 
     fn without_witnesses(&self) -> Self {
         Self::default()
